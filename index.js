@@ -1,83 +1,50 @@
-// Required packages
 const inquirer = require('inquirer');
 const fs = require('fs');
-const Logo = require('./lib/logo.js');
+const { Circle, Triangle, Square } = require('./lib/shapes');
 
-// Array of shapes for user to choose from.
-const shapesList = [
-    "Circle",
-    "Square",
-    "Triangle"
-];
+async function promptUser() {
+    const answers = await inquirer.prompt([
+        {
+            type: 'input',
+            name: 'text',
+            message: 'Enter up to three characters:',
+            validate: input => input.length <= 3 && input.length > 0
+        },
+        {
+            type: 'input',
+            name: 'textColor',
+            message: 'Enter text color (color keyword or hexadecimal number):',
+        },
+        {
+            type: 'list',
+            name: 'shape',
+            message: 'Choose a shape:',
+            choices: ['circle', 'triangle', 'square']
+        },
+        {
+            type: 'input',
+            name: 'shapeColor',
+            message: 'Enter shape color (color keyword or hexadecimal number):',
+        }
+    ]);
 
-// Array of questions for user to answer.
-const questions = [
-    "Enter text (up to 3 characters):",
-    "Enter text's color (word or hexcode):",
-    "Enter a shape from the list below:",
-    "Enter shape's color (word or hexcode):"
-];
+    let shape;
+    if (answers.shape === 'circle') {
+        shape = new Circle(answers.text, answers.textColor, answers.shapeColor);
+    } else if (answers.shape === 'triangle') {
+        shape = new Triangle(answers.text, answers.textColor, answers.shapeColor);
+    } else {
+        shape = new Square(answers.text, answers.textColor, answers.shapeColor);
+    }
 
-// Array of responses from user.
-const responses = [];
+    const svgContent = `
+        <svg width="300" height="200" xmlns="http://www.w3.org/2000/svg">
+            ${shape.render()}
+        </svg>
+    `;
 
-// Writes text from data to a Logo.svg file at locations specified in fileName.
-function writeToFile(fileName, data)
- {
-    fs.writeFile(fileName + "/Logo.svg", data, (err) =>
-    err ? console.error(err) : console.log('Generated logo.svg') 
-    );
- }
-
-/*
- Intializes SVG Logo Maker
- Calls generateLogo() function from Logo object.
-*/
-function init() 
-{
-    console.log("Welcome to the SVG Logo Maker!");
-    inquirer
-        .prompt([
-            {
-                type: 'input',
-                message: questions[0],
-                name: 'text',
-            },
-            {
-                type: 'input',
-                message: questions[1],
-                name: 'textColor',
-            },
-            {
-                type: 'rawlist',
-                message: questions[2],
-                choices: shapesList,
-                default: 'None',
-                name: 'shape',
-            },
-            {
-                type: 'input',
-                message: questions[3],
-                name: 'shapeColor',
-            },
-
-            {
-                type: 'input',
-                message: questions[4],
-                name: 'fileLocation',
-            },
-        ])
-        .then((response) => 
-            writeToFile(response.fileLocation, new Logo(                
-                response.text, 
-                response.textColor, 
-                response.shape, 
-                response.shapeColor 
-            ).generateLogo()),
-            (err) =>
-                err ? console.error(err) : console.log('SUCCESS!')
-        );
+    fs.writeFileSync('./examples', svgContent);
+    console.log('Generated logo.svg');
 }
 
-// Function call to initialize app
-init();
+promptUser();
